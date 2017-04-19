@@ -6,4 +6,4 @@ diff.log
 *.ipr
 .idea
 *.iml
-build/
+build/   
