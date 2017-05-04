@@ -1,37 +1,19 @@
 package org.protege.owl.diff;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import junit.framework.TestCase;
 
 import org.protege.owl.diff.align.AlignmentAggressiveness;
 import org.protege.owl.diff.align.AlignmentAlgorithm;
+import org.protege.owl.diff.align.AlignmentExplanation;
 import org.protege.owl.diff.align.OwlDiffMap;
-import org.protege.owl.diff.align.algorithms.MatchByCode;
-import org.protege.owl.diff.align.algorithms.MatchById;
-import org.protege.owl.diff.align.algorithms.MatchByIdFragment;
-import org.protege.owl.diff.align.algorithms.MatchByRendering;
-import org.protege.owl.diff.align.algorithms.MatchLoneSiblings;
-import org.protege.owl.diff.align.algorithms.MatchSiblingsWithSimilarBrowserText;
-import org.protege.owl.diff.align.algorithms.MatchStandardVocabulary;
-import org.protege.owl.diff.align.algorithms.SuperSubClassPinch;
+import org.protege.owl.diff.align.algorithms.*;
 import org.protege.owl.diff.align.util.PrioritizedComparator;
 import org.protege.owl.diff.service.CodeToEntityMapper;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.model.OWLObject;
+import org.semanticweb.owlapi.model.*;
 
 
 public class AlignAlgorithmTest extends TestCase {
@@ -251,6 +233,26 @@ public class AlignAlgorithmTest extends TestCase {
         assertTrue(diffs.getUnmatchedSourceEntities().isEmpty());
         
     }
-    
+
+    public void testMatchStandardVocabulary() throws OWLOntologyCreationException {
+        JunitUtilities.printDivider();
+        loadOntologies("MatchStandardVocabulary");
+        Engine e = new Engine(ontology1, ontology2);
+        e.setAlignmentAlgorithms(new MatchStandardVocabulary());
+        for (AlignmentAlgorithm algorithm : e.getAlignmentAlgorithms()){
+            assertFalse(algorithm.isCustom());
+            int expectedPrior = PrioritizedComparator.MAX_PRIORITY;
+            assertEquals(expectedPrior, algorithm.getPriority());
+            assertEquals(AlignmentAggressiveness.IGNORE_REFACTOR, algorithm.getAggressiveness());
+            String expectedName = "Match Standard OWL Terms";
+            assertEquals(expectedName,algorithm.getAlgorithmName());
+        }
+        e.phase1();
+        OwlDiffMap diffs = e.getOwlDiffMap();
+        assertFalse(diffs.getUnmatchedSourceEntities().isEmpty());
+        e.phase2();
+        OwlDiffMap diffs2 = e.getOwlDiffMap();
+        assertTrue(diffs == diffs2);
+    }
     
 }
